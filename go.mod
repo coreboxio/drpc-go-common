@@ -1,4 +1,4 @@
-module drpc-go-common
+module github.com/coreboxio/drpc-go-common
 
 go 1.22.1
 

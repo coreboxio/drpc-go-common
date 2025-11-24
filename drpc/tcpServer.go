@@ -10,8 +10,8 @@ import (
 	"sync"
 	"time"
 
-	globalConfig "github.com/drpc/drpc-go-common/config"
-	"github.com/drpc/drpc-go-common/logging"
+	globalConfig "github.com/coreboxio/drpc-go-common/config"
+	"github.com/coreboxio/drpc-go-common/logging"
 )
 
 var (

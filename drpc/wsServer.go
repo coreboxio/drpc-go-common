@@ -10,9 +10,9 @@ import (
 	"sync"
 	"time"
 
-	globalConfig "github.com/drpc/drpc-go-common/config"
-	"github.com/drpc/drpc-go-common/logging"
-	"github.com/drpc/drpc-go-common/utils"
+	globalConfig "github.com/coreboxio/drpc-go-common/config"
+	"github.com/coreboxio/drpc-go-common/logging"
+	"github.com/coreboxio/drpc-go-common/utils"
 
 	"github.com/gorilla/websocket"
 )

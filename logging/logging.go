@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/drpc/drpc-go-common/utils"
+	"github.com/coreboxio/drpc-go-common/utils"
 )
 
 const (

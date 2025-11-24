@@ -7,9 +7,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/drpc/drpc-go-common/config"
-	"github.com/drpc/drpc-go-common/logging"
-	"github.com/drpc/drpc-go-common/utils"
+	"github.com/coreboxio/drpc-go-common/config"
+	"github.com/coreboxio/drpc-go-common/logging"
+	"github.com/coreboxio/drpc-go-common/utils"
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-redis/redis/v8"

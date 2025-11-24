@@ -1,6 +1,8 @@
 package http
 
 import (
+	"bytes"
+	"io"
 	"net/http"
 	"time"
 
@@ -19,6 +21,22 @@ func Logger() gin.HandlerFunc {
 			return
 		}
 
+		// 读取 query 参数
+		query := c.Request.URL.Query().Encode()
+
+		// 读取 body（仅对 POST/PUT/PATCH 等方法）
+		var body string
+		if c.Request.Method == http.MethodPost || c.Request.Method == http.MethodPut || c.Request.Method == http.MethodPatch {
+			if c.Request.Body != nil {
+				bodyBytes, err := io.ReadAll(c.Request.Body)
+				if err == nil {
+					body = string(bodyBytes)
+					// 重新设置 body，因为已经被读取
+					c.Request.Body = io.NopCloser(bytes.NewReader(bodyBytes))
+				}
+			}
+		}
+
 		t := time.Now()
 
 		c.Next()
@@ -27,6 +45,24 @@ func Logger() gin.HandlerFunc {
 		maxLatency := time.Duration(cfg.GetInt("http_max_latency_log_ms", 2000))
 		if maxLatency > 0 && latency.Milliseconds() > maxLatency.Milliseconds() {
 			logging.Warn("[HTTP Response Time] %s %s %s", c.Request.Method, c.Request.URL.Path, latency.String())
+		}
+
+		if cfg.GetBool("http_log_enabled") {
+			finalStatus := c.Writer.Status()
+			logMsg := "[HTTP Response] %s %s %d %s"
+			logArgs := []interface{}{c.Request.Method, c.Request.URL.Path, finalStatus, latency.String()}
+
+			if query != "" {
+				logMsg += " query=%s"
+				logArgs = append(logArgs, query)
+			}
+
+			if body != "" {
+				logMsg += " body=%s"
+				logArgs = append(logArgs, body)
+			}
+
+			logging.Info(logMsg, logArgs...)
 		}
 	}
 }

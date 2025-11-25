@@ -44,6 +44,12 @@ func UserAgent() gin.HandlerFunc {
 
 		c.Set("ua", ua)
 
+		if ua != nil {
+			c.Set("uid", ua.Uid)
+			c.Set("platform", ua.Platform)
+			c.Set("token", ua.Token)
+		}
+
 		c.Next()
 	}
 }

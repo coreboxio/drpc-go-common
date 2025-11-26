@@ -42,9 +42,9 @@ func Logger() gin.HandlerFunc {
 		c.Next()
 
 		latency := time.Since(t)
-		maxLatency := time.Duration(cfg.GetInt("http_max_latency_log_ms", 2000))
-		if maxLatency > 0 && latency.Milliseconds() > maxLatency.Milliseconds() {
-			logging.Warn("[HTTP Response Time] %s %s %s", c.Request.Method, c.Request.URL.Path, latency.String())
+		maxLatency := time.Duration(cfg.GetInt("http_max_latency_log_ms", 2000)).Milliseconds()
+		if maxLatency > 0 && latency.Milliseconds() > maxLatency {
+			logging.Warn("[HTTP Response Time] %s %s %s (configLatency: %dms)", c.Request.Method, c.Request.URL.Path, latency.String(), maxLatency)
 		}
 
 		if cfg.GetBool("http_log_enabled") {

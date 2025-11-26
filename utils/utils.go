@@ -5,6 +5,7 @@ import (
 	"math/rand"
 	"net"
 	"net/http"
+	"os"
 	"strings"
 	"time"
 
@@ -12,6 +13,11 @@ import (
 )
 
 func GetDeviceIP(ifaName string) string {
+
+	if hostIP := os.Getenv("HOST_IP"); hostIP != "" {
+		return hostIP
+	}
+
 	interfaces, err := net.Interfaces()
 	if err != nil {
 		return ""

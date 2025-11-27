@@ -1,11 +1,23 @@
 package http
 
-type Code int
+import HttpCode "net/http"
 
-const (
-	Code_OK Code = 0
+type Code string
 
-	Code_AuthFail      Code = 1
-	Code_ParamError    Code = 2
-	Code_InternalError Code = 3
+type ErrorCode struct {
+	HttpStatus int
+	Code       Code
+	Message    string
+}
+
+func (e ErrorCode) Error() string {
+	return e.Message
+}
+
+var (
+	// 成功
+	Success       = ErrorCode{HttpStatus: HttpCode.StatusOK, Code: "api.success", Message: "success"}
+	AuthFail      = ErrorCode{HttpStatus: HttpCode.StatusForbidden, Code: "api.unauthorized", Message: "unauthorized"}
+	ParamError    = ErrorCode{HttpStatus: HttpCode.StatusForbidden, Code: "api.param_error", Message: "param error"}
+	InternalError = ErrorCode{HttpStatus: HttpCode.StatusForbidden, Code: "api.internal_error", Message: "internal error"}
 )

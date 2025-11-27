@@ -62,14 +62,14 @@ func Auth() gin.HandlerFunc {
 		ua, ok := c.Get("ua")
 		if !ok {
 			logging.Warn("auth fail: ua not found")
-			baseController.Error(c, Code_AuthFail, nil)
+			baseController.Error(c, AuthFail)
 			c.Abort()
 			return
 		}
 
 		if ua == nil {
 			logging.Warn("auth fail: ua is nil")
-			baseController.Error(c, Code_AuthFail, nil)
+			baseController.Error(c, AuthFail)
 			c.Abort()
 			return
 		}
@@ -78,14 +78,14 @@ func Auth() gin.HandlerFunc {
 
 		if userAgentEntity == nil {
 			logging.Warn("auth fail: userAgentEntity is nil")
-			baseController.Error(c, Code_AuthFail, nil)
+			baseController.Error(c, AuthFail)
 			c.Abort()
 			return
 		}
 
 		if userAgentEntity.Uid == 0 {
 			logging.Warn("auth fail: userAgentEntity.Uid is 0")
-			baseController.Error(c, Code_AuthFail, nil)
+			baseController.Error(c, AuthFail)
 			c.Abort()
 			return
 		}

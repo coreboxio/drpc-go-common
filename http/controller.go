@@ -17,22 +17,32 @@ const (
 	HTTP_FORBIDDEN = 403
 )
 
-func (c *BaseController) Response(ctx *gin.Context, httpCode int, code Code, data interface{}) {
-	ctx.JSON(httpCode, ResponseData{
-		Code: code,
+func (c *BaseController) Response(ctx *gin.Context, code ErrorCode, data interface{}) {
+	ctx.JSON(code.HttpStatus, ResponseData{
+		Code: code.Code,
 		Data: data,
 	})
 }
 
 func (c *BaseController) Success(ctx *gin.Context, data interface{}) {
-	c.Response(ctx, HTTP_OK, Code_OK, data)
+	c.Response(ctx, Success, data)
 }
 
-func (c *BaseController) Error(ctx *gin.Context, code Code, data interface{}) {
-	ctx.JSON(HTTP_FORBIDDEN, ResponseData{
-		Code: code,
-		Data: data,
-	})
+func (c *BaseController) Error(ctx *gin.Context, err error) {
+	c.ErrorWithData(ctx, err, nil)
+}
+
+func (c *BaseController) ErrorWithData(ctx *gin.Context, err error, data interface{}) {
+	code, ok := err.(ErrorCode)
+	if ok {
+		httpStatus := HTTP_FORBIDDEN
+		if code.HttpStatus > 0 {
+			httpStatus = code.HttpStatus
+		}
+		c.Response(ctx, ErrorCode{HttpStatus: httpStatus, Code: code.Code}, data)
+	} else {
+		c.Response(ctx, InternalError, data)
+	}
 }
 
 func (c *BaseController) GetUserAgent(ctx *gin.Context) *UserAgentEntity {

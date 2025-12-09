@@ -7,6 +7,7 @@ import (
 	"net"
 	"reflect"
 	"runtime"
+	"strings"
 	"sync"
 	"time"
 
@@ -35,6 +36,8 @@ type TCPServerClient struct {
 	ticker       *time.Ticker
 	lastPongTime time.Time
 	buffer       []byte
+
+	ignoreQuestLogMethods map[string]bool
 }
 
 type QuestProcessorInterfaceTCP interface {
@@ -262,7 +265,7 @@ func dealQuestTCP(client *TCPServerClient, quest *Quest) {
 		}
 	}()
 
-	if cfgTCPServer.GetBool("quest_log") {
+	if cfgTCPServer.GetBool("quest_log") && !client.ignoreQuestLogMethods[quest.Method()] {
 		logging.Force("[QUEST] %s, seqNum: %d, method: %s, quest: %v", client.Str(), uint32(quest.seqNum), quest.method, quest.ToJson())
 	}
 
@@ -432,15 +435,24 @@ func StartTCPServer(address string, questProcessor QuestProcessorInterfaceTCP) {
 func handleTCPServerConnection(conn net.Conn) {
 
 	client := &TCPServerClient{
-		conn:         conn,
-		seqNum:       managerTCP.nextSeqNum(),
-		questSeqNum:  0,
-		send:         make(chan []byte, cfgTCPServer.GetInt("tcp.send_channel_buffer", 512)),
-		connected:    false,
-		answerMap:    make(map[uint32]*connCallback),
-		ticker:       time.NewTicker(1 * time.Second),
-		lastPongTime: time.Now(),
-		buffer:       make([]byte, 0),
+		conn:                  conn,
+		seqNum:                managerTCP.nextSeqNum(),
+		questSeqNum:           0,
+		send:                  make(chan []byte, cfgTCPServer.GetInt("tcp.send_channel_buffer", 512)),
+		connected:             false,
+		answerMap:             make(map[uint32]*connCallback),
+		ticker:                time.NewTicker(1 * time.Second),
+		lastPongTime:          time.Now(),
+		buffer:                make([]byte, 0),
+		ignoreQuestLogMethods: make(map[string]bool),
+	}
+
+	ignoreQuestLogMethods := cfgTCPServer.GetString("tcp.ignore_quest_log_methods", "")
+	if ignoreQuestLogMethods != "" {
+		methods := strings.Split(ignoreQuestLogMethods, ",")
+		for _, method := range methods {
+			client.ignoreQuestLogMethods[method] = true
+		}
 	}
 
 	managerTCP.register <- client

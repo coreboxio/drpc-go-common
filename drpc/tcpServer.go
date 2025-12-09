@@ -447,7 +447,7 @@ func handleTCPServerConnection(conn net.Conn) {
 		ignoreQuestLogMethods: make(map[string]bool),
 	}
 
-	ignoreQuestLogMethods := cfgTCPServer.GetString("tcp.ignore_quest_log_methods", "")
+	ignoreQuestLogMethods := cfgTCPServer.GetString("ignore_quest_log_methods", "")
 	if ignoreQuestLogMethods != "" {
 		methods := strings.Split(ignoreQuestLogMethods, ",")
 		for _, method := range methods {

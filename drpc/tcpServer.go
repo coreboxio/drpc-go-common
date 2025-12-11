@@ -340,6 +340,10 @@ func (c *TCPServerClient) Str() string {
 	return fmt.Sprintf("connSeq: %d", c.seqNum)
 }
 
+func (c *TCPServerClient) GetConnection() net.Conn {
+	return c.conn
+}
+
 type ConnectionManagerTCP struct {
 	connections    map[uint64]*TCPServerClient
 	register       chan *TCPServerClient

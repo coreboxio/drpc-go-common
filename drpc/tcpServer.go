@@ -26,6 +26,7 @@ var (
 )
 
 type TCPServerClient struct {
+	manager      *ConnectionManagerTCP
 	seqNum       uint64
 	questSeqNum  uint32
 	conn         net.Conn
@@ -279,7 +280,7 @@ func dealQuestTCP(client *TCPServerClient, quest *Quest) {
 	}
 
 	methodUpper := capitalizeFirstLetter(quest.Method())
-	value := reflect.ValueOf(managerTCP.questProcessor)
+	value := reflect.ValueOf(client.manager.questProcessor)
 	method := value.MethodByName(methodUpper)
 
 	if !method.IsValid() || method.Kind() != reflect.Func {
@@ -298,7 +299,7 @@ func dealQuestTCP(client *TCPServerClient, quest *Quest) {
 
 	answerReflect := method.Call(args)
 
-	managerTCP.AddQpsStats(quest.Method())
+	client.manager.AddQpsStats(quest.Method())
 
 	if quest.IsTwoWay() && len(answerReflect) < 1 {
 		logging.Error("No available answer returned, method: %s", quest.Method())
@@ -356,15 +357,7 @@ type ConnectionManagerTCP struct {
 	qpsStatMap     map[string]uint32
 }
 
-var managerTCP = ConnectionManagerTCP{
-	connections:  make(map[uint64]*TCPServerClient),
-	register:     make(chan *TCPServerClient),
-	unregister:   make(chan *TCPServerClient),
-	seqNum:       0,
-	lastStatTime: time.Now(),
-	ticker:       time.NewTicker(1 * time.Second),
-	qpsStatMap:   make(map[string]uint32),
-}
+var managerTCPMap = make(map[string]*ConnectionManagerTCP)
 
 func (mgr *ConnectionManagerTCP) AddQpsStats(method string) {
 	if cfgTCPServer.GetInt("tcp.stat_interval_seconds", 30) <= 0 {
@@ -421,9 +414,18 @@ func StartTCPServer(address string, questProcessor QuestProcessorInterfaceTCP) {
 	defer listener.Close()
 	logging.Info("TCP server started on %s", address)
 
-	managerTCP.questProcessor = questProcessor
+	managerTCPMap[address] = &ConnectionManagerTCP{
+		connections:    make(map[uint64]*TCPServerClient),
+		register:       make(chan *TCPServerClient),
+		unregister:     make(chan *TCPServerClient),
+		seqNum:         0,
+		lastStatTime:   time.Now(),
+		ticker:         time.NewTicker(1 * time.Second),
+		qpsStatMap:     make(map[string]uint32),
+		questProcessor: questProcessor,
+	}
 
-	go managerTCP.Loop()
+	go managerTCPMap[address].Loop()
 
 	for {
 		conn, err := listener.Accept()
@@ -432,15 +434,16 @@ func StartTCPServer(address string, questProcessor QuestProcessorInterfaceTCP) {
 			continue
 		}
 
-		go handleTCPServerConnection(conn)
+		go handleTCPServerConnection(conn, managerTCPMap[address])
 	}
 }
 
-func handleTCPServerConnection(conn net.Conn) {
+func handleTCPServerConnection(conn net.Conn, manager *ConnectionManagerTCP) {
 
 	client := &TCPServerClient{
+		manager:               manager,
 		conn:                  conn,
-		seqNum:                managerTCP.nextSeqNum(),
+		seqNum:                manager.nextSeqNum(),
 		questSeqNum:           0,
 		send:                  make(chan []byte, cfgTCPServer.GetInt("tcp.send_channel_buffer", 512)),
 		connected:             false,
@@ -459,7 +462,7 @@ func handleTCPServerConnection(conn net.Conn) {
 		}
 	}
 
-	managerTCP.register <- client
+	manager.register <- client
 
 	go client.readPump()
 	go client.writePump()
@@ -479,7 +482,7 @@ func (m *ConnectionManagerTCP) Loop() {
 			m.mu.Unlock()
 			logging.Info("[TCP.SERVER] %s connected, remoteAddr: %v, localAddr: %v", client.Str(), client.conn.RemoteAddr(), client.conn.LocalAddr())
 
-			go managerTCP.questProcessor.ConnectionConnected(client)
+			go m.questProcessor.ConnectionConnected(client)
 
 		case client := <-m.unregister:
 			m.mu.Lock()
@@ -492,7 +495,7 @@ func (m *ConnectionManagerTCP) Loop() {
 			}
 			m.mu.Unlock()
 
-			go managerTCP.questProcessor.ConnectionClosed(client)
+			go m.questProcessor.ConnectionClosed(client)
 		case <-m.ticker.C:
 			m.PrintStatus()
 		}
@@ -529,7 +532,7 @@ func (c *TCPServerClient) writePump() {
 func (c *TCPServerClient) readPump() {
 	defer func() {
 		c.conn.Close()
-		managerTCP.unregister <- c
+		c.manager.unregister <- c
 	}()
 
 	buf := make([]byte, 4096)

@@ -88,9 +88,9 @@ public:
 
 class ClusterManager {
 public: 
-	ClusterManager(const std::string& zk_list, const std::string& credential, const std::string& project, const std::string& type, const std::vector<std::string>& interested_types, const std::string& addr,  int timeout = 15000);
-	ClusterManager(const std::string& zk_list, const std::string& credential, const std::string& project, const std::vector<std::string>& interested_types,  int timeout = 15000);
-	ClusterManager(const std::string& zk_list, const std::string& credential, const std::string& project, const std::string& type, const std::string& addr,  int timeout = 15000);
+	ClusterManager(const std::string& zk_list, const std::string& credential, const std::string& project, const std::string& type, const std::vector<std::string>& interested_types, const std::string& addr,  int timeout = 5000);
+	ClusterManager(const std::string& zk_list, const std::string& credential, const std::string& project, const std::vector<std::string>& interested_types,  int timeout = 5000);
+	ClusterManager(const std::string& zk_list, const std::string& credential, const std::string& project, const std::string& type, const std::string& addr,  int timeout = 5000);
 	static std::shared_ptr<ClusterManager> create(const std::string& selfEndpoint, const std::string myServerName, const std::string& zookeeperWatchList,
             const std::string& zookeeperEndpoints, const std::string& zookeeperCredential, const std::string& zookeeperProject);
     static void registerLogCallback(LogCallbackFunc callback);

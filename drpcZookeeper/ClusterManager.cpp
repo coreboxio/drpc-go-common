@@ -240,7 +240,7 @@ void ClusterManager::removeNode(const std::string& path){
 	   log("INFO", formatString("Zookeeper node %s already removed", path.c_str()));
     }
     else if(rc == ZINVALIDSTATE || rc == ZCONNECTIONLOSS || rc == ZSESSIONEXPIRED){
-        LOG_INFO("Zookeeper connection invalid/closed, skip removing node %s, error: %s", path.c_str(), zerror(rc));
+        log("INFO", formatString("Zookeeper connection invalid/closed, skip removing node %s, error: %s", path.c_str(), zerror(rc)));
     }
     else{
         std::stringstream msgstr;

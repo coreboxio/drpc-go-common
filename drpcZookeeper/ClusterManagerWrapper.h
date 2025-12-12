@@ -11,6 +11,7 @@ extern "C" {
     void registerLogCallback(LogCallbackFunc callback);
     void initClusterManager(const char* selfEndpoint, const char* myServerName, const char* zookeeperWatchList,
             const char* zookeeperEndpoints, const char* zookeeperCredential, const char* zookeeperProject);
+    void quitClusterManager();
 
 #ifdef __cplusplus
 }

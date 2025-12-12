@@ -16,6 +16,12 @@ void initClusterManager(const char* selfEndpoint, const char* myServerName, cons
 	cmPtr = ClusterManager::create(selfEndpoint, myServerName, zookeeperWatchList, zookeeperEndpoints, zookeeperCredential, zookeeperProject);
 }
 
+void quitClusterManager() {
+    if (cmPtr) {
+        cmPtr->quitCluster();
+    }
+}
+
 #ifdef __cplusplus
 }
 #endif

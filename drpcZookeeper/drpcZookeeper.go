@@ -11,41 +11,41 @@ void cppLogCallback(char* level, char* body);
 import "C"
 import "unsafe"
 
-var logCallback func(level string, content string) = nil 
+var logCallback func(level string, content string) = nil
 
 //export cppLogCallback
 func cppLogCallback(levelC *C.char, contentC *C.char) {
-    level := C.GoString(levelC)
-    content := C.GoString(contentC)
+	level := C.GoString(levelC)
+	content := C.GoString(contentC)
 
-    if logCallback != nil {
-        logCallback(level, content)
-    }
+	if logCallback != nil {
+		logCallback(level, content)
+	}
 }
 
 func SetLogCallback(callback func(level string, content string)) {
-    logCallback = callback
-    C.registerLogCallback(C.LogCallbackFunc(C.cppLogCallback));
+	logCallback = callback
+	C.registerLogCallback(C.LogCallbackFunc(C.cppLogCallback))
 }
 
-func InitClusterManager(selfEndpoint string, myServerName string, zookeeperWatchList string, 
-    zookeeperEndpoints string, zookeeperCredential string, zookeeperProject string) {
+func InitClusterManager(selfEndpoint string, myServerName string, zookeeperWatchList string,
+	zookeeperEndpoints string, zookeeperCredential string, zookeeperProject string) {
 
 	selfEndpointC := C.CString(selfEndpoint)
 	defer C.free(unsafe.Pointer(selfEndpointC))
-	
+
 	myServerNameC := C.CString(myServerName)
 	defer C.free(unsafe.Pointer(myServerNameC))
-	
+
 	zookeeperWatchListC := C.CString(zookeeperWatchList)
 	defer C.free(unsafe.Pointer(zookeeperWatchListC))
-	
+
 	zookeeperEndpointsC := C.CString(zookeeperEndpoints)
 	defer C.free(unsafe.Pointer(zookeeperEndpointsC))
-	
+
 	zookeeperCredentialC := C.CString(zookeeperCredential)
 	defer C.free(unsafe.Pointer(zookeeperCredentialC))
-	
+
 	zookeeperProjectC := C.CString(zookeeperProject)
 	defer C.free(unsafe.Pointer(zookeeperProjectC))
 
@@ -53,3 +53,6 @@ func InitClusterManager(selfEndpoint string, myServerName string, zookeeperWatch
 
 }
 
+func QuitClusterManager() {
+	C.quitClusterManager()
+}

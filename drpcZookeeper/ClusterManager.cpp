@@ -155,11 +155,13 @@ void ClusterManager::init(bool online_on_start){
 }
 
 void ClusterManager::quitCluster(){
-    zookeeper_close(_zh);
+    // 先删除节点，再关闭连接
     std::string path = "/" + _project + std::string(ROOT_SERVER_STATS) + "/" + _my_type + "/" + _my_addr;
     removeNode(path);
     path = "/" + _project + std::string(ROOT) + "/" + _my_type + "/" + _my_addr;
-    removeNode(path);       
+    removeNode(path);
+    // 删除节点后再关闭连接
+    zookeeper_close(_zh);
 }
 
 void ClusterManager::setStatus(int conns, int threads){
@@ -236,6 +238,9 @@ void ClusterManager::removeNode(const std::string& path){
     }
     else if(rc == ZNONODE){
 	   log("INFO", formatString("Zookeeper node %s already removed", path.c_str()));
+    }
+    else if(rc == ZINVALIDSTATE || rc == ZCONNECTIONLOSS || rc == ZSESSIONEXPIRED){
+        LOG_INFO("Zookeeper connection invalid/closed, skip removing node %s, error: %s", path.c_str(), zerror(rc));
     }
     else{
         std::stringstream msgstr;

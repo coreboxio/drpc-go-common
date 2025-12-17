@@ -20,14 +20,15 @@ const (
 )
 
 var (
-	logLevel       = INFO
-	executableName = ""
-	pid            = 0
-	logTag         = ""
-	levelStr       = "INFO"
-	ip             = ""
-	logEndpoint    = "std::cout"
-	dlog           *DLog
+	logLevel         = INFO
+	executableName   = ""
+	pid              = 0
+	logTag           = ""
+	levelStr         = "INFO"
+	ip               = ""
+	logEndpoint      = "std::cout"
+	dlog             *DLog
+	logBodyMaxLength = 1024
 )
 
 func Init(tag string, execName string, logEndpoint string, logLevel string, ifaName string) {
@@ -85,6 +86,11 @@ func SetExecutableName(name string) {
 }
 
 func Log(level string, body string) {
+
+	if len(body) > logBodyMaxLength {
+		body = body[:logBodyMaxLength]
+	}
+
 	pc, file, line, ok := runtime.Caller(2)
 	if !ok {
 		fmt.Println("Unable to get caller information")

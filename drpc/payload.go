@@ -2,6 +2,7 @@ package drpc
 
 import (
 	"encoding/json"
+	"fmt"
 )
 
 type Payload struct {
@@ -9,22 +10,45 @@ type Payload struct {
 }
 
 func (payload *Payload) ToJson() string {
-	converted := make(map[string]interface{})
-
-	for key, value := range payload.data {
-		strKey, ok := key.(string) // 断言键是字符串类型
-		if !ok {
-			return ""
-		}
-		converted[strKey] = value
-	}
-
-	jsonData, err := json.Marshal(converted)
+	normalized := normalizeJSONValue(payload.data)
+	jsonData, err := json.Marshal(normalized)
 	if err != nil {
 		return ""
 	}
 
 	return string(jsonData)
+}
+
+func normalizeJSONValue(value interface{}) interface{} {
+	switch v := value.(type) {
+	case map[interface{}]interface{}:
+		converted := make(map[string]interface{}, len(v))
+		for key, val := range v {
+			converted[fmt.Sprint(key)] = normalizeJSONValue(val)
+		}
+		return converted
+	case map[string]interface{}:
+		converted := make(map[string]interface{}, len(v))
+		for key, val := range v {
+			converted[key] = normalizeJSONValue(val)
+		}
+		return converted
+	case []interface{}:
+		converted := make([]interface{}, len(v))
+		for i := range v {
+			converted[i] = normalizeJSONValue(v[i])
+		}
+		return converted
+	case Payload:
+		return normalizeJSONValue(v.data)
+	case *Payload:
+		if v == nil {
+			return nil
+		}
+		return normalizeJSONValue(v.data)
+	default:
+		return value
+	}
 }
 
 func NewPayload() *Payload {

@@ -81,7 +81,7 @@ func (info *KeepAliveInfos) isLost() bool {
 ////////////////////////////////KeepAliveCallback/////////////////////////////
 
 type KeepAliveCallback struct {
-	connection *tcpConnection
+	connection *TcpConnection
 }
 
 func (callback *KeepAliveCallback) OnAnswer(answer *Answer) {
@@ -98,7 +98,7 @@ func (callback *KeepAliveCallback) OnException(answer *Answer) {
 	callback.connection.logger.Printf("Keep alive ping for %s failed, local addr: %s. errorCode: %d, infos: %s", callback.connection.conn.RemoteAddr(), callback.connection.conn.LocalAddr(), errorCode, errInfo)
 }
 
-type tcpConnection struct {
+type TcpConnection struct {
 	mutex          sync.Mutex
 	answerMap      map[uint32]*connCallback
 	conn           net.Conn
@@ -116,9 +116,9 @@ type tcpConnection struct {
 }
 
 func newTCPConnection(logger Logger, onConnected tcpClientConnectedCallback, onClosed tcpClientCloseCallback,
-	questProcessor QuestProcessor, keepAliveParams *KeepAliveParams) *tcpConnection {
+	questProcessor QuestProcessor, keepAliveParams *KeepAliveParams) *TcpConnection {
 
-	conn := new(tcpConnection)
+	conn := new(TcpConnection)
 	conn.answerMap = make(map[uint32]*connCallback)
 	conn.closeSignChan = make(chan bool)
 	conn.writeChan = make(chan []byte, Config.netChanBufferSize)
@@ -153,18 +153,18 @@ func newTCPConnection(logger Logger, onConnected tcpClientConnectedCallback, onC
 	return conn
 }
 
-func (conn *tcpConnection) isConnected() bool {
+func (conn *TcpConnection) isConnected() bool {
 	conn.mutex.Lock()
 	defer conn.mutex.Unlock()
 
 	return conn.connected
 }
 
-func cleanTCPConnection(conn *tcpConnection) {
+func cleanTCPConnection(conn *TcpConnection) {
 	go conn.close()
 }
 
-func (conn *tcpConnection) isRequireKeepAlive() (bool, time.Duration) {
+func (conn *TcpConnection) isRequireKeepAlive() (bool, time.Duration) {
 	isLost := false
 	if conn.keepAliveInfo == nil {
 		return isLost, 0
@@ -177,17 +177,17 @@ func (conn *tcpConnection) isRequireKeepAlive() (bool, time.Duration) {
 	return isLost, 0
 }
 
-func (conn *tcpConnection) updateKeepAliveMs() {
+func (conn *TcpConnection) updateKeepAliveMs() {
 	conn.keepAliveInfo.updatePingSentMs()
 }
 
-func (conn *tcpConnection) updateReceivedMs() {
+func (conn *TcpConnection) updateReceivedMs() {
 	if conn.keepAliveInfo != nil {
 		conn.keepAliveInfo.updateReceivedMs()
 	}
 }
 
-func (conn *tcpConnection) realConnect(endpoint string, timeout time.Duration) (ok bool) {
+func (conn *TcpConnection) realConnect(endpoint string, timeout time.Duration) (ok bool) {
 	var err error
 
 	conn.mutex.Lock()
@@ -214,7 +214,7 @@ func (conn *tcpConnection) realConnect(endpoint string, timeout time.Duration) (
 	return true
 }
 
-func (conn *tcpConnection) connect(endpoint string, timeout time.Duration) (ok bool) {
+func (conn *TcpConnection) connect(endpoint string, timeout time.Duration) (ok bool) {
 	ok = conn.realConnect(endpoint, timeout)
 	if conn.onConnected != nil {
 		if ok {
@@ -226,7 +226,7 @@ func (conn *tcpConnection) connect(endpoint string, timeout time.Duration) (ok b
 	return
 }
 
-func (conn *tcpConnection) readRawData() *rawData {
+func (conn *TcpConnection) readRawData() *rawData {
 	buffer := newRawData()
 
 	if _, err := io.ReadFull(conn.conn, buffer.header); err != nil {
@@ -265,7 +265,7 @@ func (conn *tcpConnection) readRawData() *rawData {
 	return buffer
 }
 
-func (conn *tcpConnection) processRawData(data *rawData) bool {
+func (conn *TcpConnection) processRawData(data *rawData) bool {
 	switch data.header[2] {
 
 	case MessageTypeOneWay, MessageTypeTwoWay:
@@ -320,7 +320,7 @@ func callAnswerCallback(answer *Answer, cb *connCallback) {
 	}
 }
 
-func (conn *tcpConnection) dealQuest(quest *Quest) {
+func (conn *TcpConnection) dealQuest(quest *Quest) {
 
 	defer func() {
 		if r := recover(); r != nil {
@@ -347,7 +347,7 @@ func (conn *tcpConnection) dealQuest(quest *Quest) {
 	}
 }
 
-func (conn *tcpConnection) realDealQuest(quest *Quest) {
+func (conn *TcpConnection) realDealQuest(quest *Quest) {
 
 	processFunc := conn.questProcessor.Process(quest.method)
 	if processFunc == nil {
@@ -386,7 +386,7 @@ func (conn *tcpConnection) realDealQuest(quest *Quest) {
 	}
 }
 
-func (conn *tcpConnection) readLoop() {
+func (conn *TcpConnection) readLoop() {
 
 	defer conn.close()
 
@@ -403,7 +403,7 @@ func (conn *tcpConnection) readLoop() {
 	}
 }
 
-func (conn *tcpConnection) workLoop() {
+func (conn *TcpConnection) workLoop() {
 
 	for {
 		select {
@@ -426,7 +426,7 @@ func (conn *tcpConnection) workLoop() {
 	}
 }
 
-func (conn *tcpConnection) checkSendPing() {
+func (conn *TcpConnection) checkSendPing() {
 	if isLost, timeout := conn.isRequireKeepAlive(); isLost {
 		conn.close()
 	} else if timeout > 0 {
@@ -444,7 +444,7 @@ func (conn *tcpConnection) checkSendPing() {
 	}
 }
 
-func (conn *tcpConnection) cleanTimeoutedCallback() {
+func (conn *TcpConnection) cleanTimeoutedCallback() {
 
 	now := time.Now()
 	curr := now.Unix()
@@ -472,7 +472,7 @@ func (conn *tcpConnection) cleanTimeoutedCallback() {
 	}
 }
 
-func (conn *tcpConnection) cleanCallbackMap() {
+func (conn *TcpConnection) cleanCallbackMap() {
 	conn.mutex.Lock()
 	defer conn.mutex.Unlock()
 
@@ -483,7 +483,7 @@ func (conn *tcpConnection) cleanCallbackMap() {
 	}
 }
 
-func (conn *tcpConnection) sendQuest(quest *Quest, callback *connCallback) error {
+func (conn *TcpConnection) sendQuest(quest *Quest, callback *connCallback) error {
 
 	conn.mutex.Lock()
 	if conn.seqNum == 0 {
@@ -515,7 +515,7 @@ func (conn *tcpConnection) sendQuest(quest *Quest, callback *connCallback) error
 	return nil
 }
 
-func (conn *tcpConnection) sendAnswer(answer *Answer) error {
+func (conn *TcpConnection) sendAnswer(answer *Answer) error {
 
 	binData, err := answer.Raw()
 	if err != nil {
@@ -534,7 +534,7 @@ func (conn *tcpConnection) sendAnswer(answer *Answer) error {
 	return nil
 }
 
-func (conn *tcpConnection) close() {
+func (conn *TcpConnection) close() {
 
 	conn.mutex.Lock()
 	defer conn.mutex.Unlock()

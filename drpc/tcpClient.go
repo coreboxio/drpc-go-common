@@ -17,7 +17,7 @@ type AnswerCallback interface {
 }
 
 type QuestProcessor interface {
-	Process(method string) func(*tcpConnection, *Quest) (*Answer, error)
+	Process(method string) func(*TcpConnection, *Quest) (*Answer, error)
 }
 
 type KeepAliveParams struct {
@@ -35,7 +35,7 @@ type TCPClient struct {
 	endpoint        string
 	timeout         time.Duration
 	connectTimeout  time.Duration
-	conn            *tcpConnection
+	conn            *TcpConnection
 	questProcessor  QuestProcessor
 	onConnected     tcpClientConnectedCallback
 	onClosed        tcpClientCloseCallback
@@ -157,7 +157,7 @@ func (client *TCPClient) Dial() bool {
 	return client.Connect()
 }
 
-func (client *TCPClient) checkConnection() *tcpConnection {
+func (client *TCPClient) checkConnection() *TcpConnection {
 
 	ok := client.IsConnected()
 	if !ok {

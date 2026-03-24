@@ -334,7 +334,7 @@ func (conn *TcpConnection) dealQuest(quest *Quest) {
 		if quest.isTwoWay {
 
 			answer := NewErrorAnswer(quest, DRPC_EC_CORE_UNKNOWN_METHOD, "Client quest processor is unconfiged.")
-			if err := conn.sendAnswer(answer); err == nil {
+			if err := conn.SendAnswer(answer); err == nil {
 				conn.logger.Printf("[ERROR] Received twoway quest, but quest processor is nil. Method: %s.", quest.method)
 			} else {
 				conn.logger.Printf("[ERROR] Received twoway quest, but quest processor is nil. Method: %s. Send default answer error, err: %v",
@@ -354,7 +354,7 @@ func (conn *TcpConnection) realDealQuest(quest *Quest) {
 		if quest.isTwoWay {
 
 			answer := NewErrorAnswer(quest, DRPC_EC_CORE_UNKNOWN_METHOD, "Method function is unconfiged.")
-			if err := conn.sendAnswer(answer); err == nil {
+			if err := conn.SendAnswer(answer); err == nil {
 				conn.logger.Printf("[ERROR] Received twoway quest, but method function is unconfiged. Method: %s.", quest.method)
 			} else {
 				conn.logger.Printf("[ERROR] Received twoway quest, but method function is unconfiged. Method: %s. Send default answer error, err: %v",
@@ -376,7 +376,7 @@ func (conn *TcpConnection) realDealQuest(quest *Quest) {
 	if answer != nil {
 
 		if quest.isTwoWay {
-			if err := conn.sendAnswer(answer); err != nil {
+			if err := conn.SendAnswer(answer); err != nil {
 				conn.logger.Printf("[ERROR] Send quest answer error. Method: %s, err: %v", quest.method, err)
 			}
 		} else {
@@ -515,7 +515,7 @@ func (conn *TcpConnection) sendQuest(quest *Quest, callback *connCallback) error
 	return nil
 }
 
-func (conn *TcpConnection) sendAnswer(answer *Answer) error {
+func (conn *TcpConnection) SendAnswer(answer *Answer) error {
 
 	binData, err := answer.Raw()
 	if err != nil {

@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/binary"
 	"errors"
-	"fmt"
 	"io"
 	"net"
 	"runtime"
@@ -369,7 +368,7 @@ func (conn *tcpConnection) realDealQuest(quest *Quest) {
 		return
 	}
 
-	answer, err := processFunc(quest)
+	answer, err := processFunc(conn, quest)
 	if err != nil {
 		conn.logger.Printf("[ERROR] Process quest error. Method: %s, err: %v", quest.method, err)
 	}
@@ -384,22 +383,6 @@ func (conn *tcpConnection) realDealQuest(quest *Quest) {
 			conn.logger.Printf("[ERROR] Return answer for oneway quest. Method: %s, answer: %v", quest.method, answer)
 		}
 
-	} else {
-
-		if quest.isTwoWay {
-
-			ex := "Quest processer don't return invalid answer."
-			if err != nil {
-				ex = fmt.Sprintf("Client error: %v", err)
-			}
-
-			answer = NewErrorAnswer(quest, DRPC_EC_CORE_UNKNOWN_ERROR, ex)
-
-			if sendErr := conn.sendAnswer(answer); sendErr != nil {
-				conn.logger.Printf("[ERROR] Send quest error answer error. Method: %s, send error: %v, quest error: %v",
-					quest.method, sendErr, err)
-			}
-		}
 	}
 }
 

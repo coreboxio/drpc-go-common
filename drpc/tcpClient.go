@@ -17,7 +17,7 @@ type AnswerCallback interface {
 }
 
 type QuestProcessor interface {
-	Process(method string) func(*Quest) (*Answer, error)
+	Process(method string) func(*tcpConnection, *Quest) (*Answer, error)
 }
 
 type KeepAliveParams struct {

@@ -29,7 +29,7 @@ var (
 	logEndpoint      = "std::cout"
 	dlog             *DLog
 	logBodyMaxLength = 1024
-	logType          = ""
+	logTypeName      = ""
 )
 
 func Init(tag string, execName string, logEndpoint string, logLevel string, ifaName string, logType string) {
@@ -38,7 +38,7 @@ func Init(tag string, execName string, logEndpoint string, logLevel string, ifaN
 	SetIfaName(ifaName)
 	SetLogEndpoint(logEndpoint)
 	logTag = tag
-	logType = logType
+	logTypeName = logType
 	if strings.HasPrefix(logEndpoint, "unix://") {
 		dlog = NewDLog(strings.TrimPrefix(logEndpoint, "unix://"), 3*time.Second, 1)
 	} else {
@@ -107,7 +107,7 @@ func Log(level string, body string) {
 	timeFormat := "2006-01-02 15:04:05,000"
 	currentTime := time.Now().Format(timeFormat)
 
-	outBody := fmt.Sprintf("[%s]~[%s]~[%s]~[%d(0)]~[%s]~[%s@%s:%d]~[%s]: %s", currentTime, level, ip, pid, executableName, lastFuncName, fileName, line, logType, body)
+	outBody := fmt.Sprintf("[%s]~[%s]~[%s]~[%d(0)]~[%s]~[%s@%s:%d]~[%s]: %s", currentTime, level, ip, pid, executableName, lastFuncName, fileName, line, logTypeName, body)
 	if logEndpoint == "std::cout" {
 		fmt.Printf("%s\n", outBody)
 	} else if strings.HasPrefix(logEndpoint, "unix://") {

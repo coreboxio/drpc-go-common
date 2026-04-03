@@ -500,7 +500,7 @@ func decodePackageWS(client *WSServerClient, data []byte) {
 			}
 
 			client.lastPongTime = time.Now()
-			dealQuestWS(client, quest)
+			go dealQuestWS(client, quest)
 
 		case MessageTypeAnswer:
 			answer, err := NewAnswerWithBuffer(dataBuffer.header, dataBuffer.body)
@@ -511,7 +511,7 @@ func decodePackageWS(client *WSServerClient, data []byte) {
 			}
 
 			client.lastPongTime = time.Now()
-			dealAnswerWS(client, answer)
+			go dealAnswerWS(client, answer)
 		}
 	}
 }

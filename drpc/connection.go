@@ -276,7 +276,7 @@ func (conn *TcpConnection) processRawData(data *rawData) bool {
 			return false
 		}
 
-		conn.dealQuest(quest)
+		go conn.dealQuest(quest)
 
 	case MessageTypeAnswer:
 		answer, err := NewAnswerWithRawData(data)
